@@ -1,0 +1,18 @@
+{
+    "name": "jonah/templa-php",
+    "description": "A simple framework to allow easily loading templates and make web development easier",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "TemplaPHP\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Jonah123456789",
+            "email": "jonah@jo-dev.net"
+        }
+    ],
+    "require": {}
+}

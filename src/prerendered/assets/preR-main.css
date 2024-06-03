@@ -1,0 +1,26 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+
+.mainContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: calc(100vh - 70px);
+}
+
+.errorContainer {
+    text-align: center;
+}
+
+.errorContainer h1 {
+    color: red;
+}
+
+.footer {
+    height: 70px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
