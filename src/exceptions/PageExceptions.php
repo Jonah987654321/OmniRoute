@@ -1,6 +1,6 @@
 <?php
 
-namespace OmniRoute\Exceptions\RouterExceptions;
+namespace OmniRoute\Exceptions\PageExceptions;
 use Exception;
 
 class InvalidPagePath extends Exception {

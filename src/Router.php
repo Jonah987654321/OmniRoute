@@ -1,11 +1,11 @@
 <?php
 
-namespace TemplaPHP;
+namespace OmniRoute;
 
-use TemplaPHP\Exceptions\RouterExceptions;
+use OmniRoute\Exceptions\RouterExceptions;
 require_once __DIR__."/exceptions/RouterExceptions.php";
 
-use TemplaPHP\utils\RenderEngine;
+use OmniRoute\utils\RenderEngine;
 require_once __DIR__."/utils/RenderEngine.php";
 
 class Router {
@@ -35,7 +35,7 @@ class Router {
     public static function run() {
 
         $parsed_url = parse_url($_SERVER['REQUEST_URI']);
-        $path = $parsed_url["path"];
+        $path = (str_ends_with($parsed_url["path"], "/"))?$parsed_url["path"]:$parsed_url["path"]."/";
         
         if (isset(self::$routes[$path])) {
             $toLoad = self::$routes[$path];
@@ -66,7 +66,7 @@ class Router {
     }
 
     private static function loadPrerendered(string $type) {
-        require_once __DIR__."/prerendered/".$type.".php";
+        require_once __DIR__."/prerendered/$type.php";
     }
 
     private static function validatePagePath(string $page) {
@@ -74,7 +74,7 @@ class Router {
             $bt = debug_backtrace();
             self::$siteDir = dirname(end($bt)["file"]);
         }
-        if(file_exists(self::$siteDir."/public/".$page)) {
+        if(file_exists(self::$siteDir."/public/$page")) {
             return true;
         } else {
             throw new RouterExceptions\InvalidPagePath($page, self::$siteDir."/public/");

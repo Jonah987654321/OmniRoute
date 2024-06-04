@@ -17,7 +17,7 @@
             </div>
         </div>
         <div class="footer">
-            Powered by TemplaPHP
+            Powered by OmniRoute
         </div>
     </body>
 </html>
