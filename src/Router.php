@@ -10,26 +10,20 @@ require_once __DIR__."/utils/RenderEngine.php";
 
 class Router {
     private static array $routes = array();
-    private static string $notFoundAction, $invalidMethodAction;
+    private static $notFoundAction, $invalidMethodAction;
     private static string $siteDir;
 
-    public static function add(string $path, string $page, string $method = "GET") {
-        if(self::validatePagePath($page)) {
-            $path = (str_ends_with($path, "/"))?$path:$path."/";
-            self::$routes[$path] = ["page"=>$page, "method"=>$method];
-        }
+    public static function add(string $path, callable $callback, array $method = array("GET")) {
+        $path = (str_ends_with($path, "/"))?$path:$path."/";
+        self::$routes[$path] = ["callback"=>$callback, "method"=>$method];
     }
 
-    public static function setNotFound(string $page) {
-        if(self::validatePagePath($page)) {
-            self::$notFoundAction = $page;
-        }
+    public static function setNotFound(callable $callback) {
+        self::$notFoundAction = $callback;
     }
 
-    public static function setInvalidMethod(string $page) {
-        if(self::validatePagePath($page)) {
-            self::$invalidMethodAction = $page;
-        }
+    public static function setInvalidMethod(callable $callback) {
+        self::$invalidMethodAction = $callback;
     }
 
     public static function run() {
@@ -39,12 +33,12 @@ class Router {
         
         if (isset(self::$routes[$path])) {
             $toLoad = self::$routes[$path];
-            if ($_SERVER["REQUEST_METHOD"] == $toLoad["method"]) {
-                self::loadPage($toLoad["page"]);
+            if (in_array($_SERVER["REQUEST_METHOD"], $toLoad["method"])) {
+                $toLoad["callback"]();
             } else {
                 http_response_code(405);
                 if (isset(self::$invalidMethodAction)) {
-                    self::loadPage(self::$invalidMethodAction);
+                    call_user_func_array(self::$invalidMethodAction, array($path, $_SERVER["REQUEST_METHOD"]));
                 } else {
                     self::loadPrerendered("405");
                 }
@@ -52,33 +46,15 @@ class Router {
         } else {
             http_response_code(404);
             if (isset(self::$notFoundAction)) {
-                self::loadPage(self::$notFoundAction);
+                call_user_func_array(self::$notFoundAction, array($path));
             } else {
                 self::loadPrerendered("404");
             }
         }
     }
 
-    private static function loadPage(string $page) {
-        require_once self::$siteDir."/public/".$page;
-        $re = new RenderEngine(Page::getInstance());
-        $re->render();
-    }
-
     private static function loadPrerendered(string $type) {
         require_once __DIR__."/prerendered/$type.php";
-    }
-
-    private static function validatePagePath(string $page) {
-        if (!isset(self::$siteDir)) {
-            $bt = debug_backtrace();
-            self::$siteDir = dirname(end($bt)["file"]);
-        }
-        if(file_exists(self::$siteDir."/public/$page")) {
-            return true;
-        } else {
-            throw new RouterExceptions\InvalidPagePath($page, self::$siteDir."/public/");
-        }
     }
 }
 
