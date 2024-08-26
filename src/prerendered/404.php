@@ -1,6 +1,6 @@
 <html>
     <head>
-        <title>404 - Not Found</title>
+        <title>404 Not Found</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta charset="utf-8">
     </head>
@@ -12,8 +12,8 @@
     <body>
         <div class="mainContainer">
             <div class="errorContainer">
-                <h1>404 - Not Found</h1>
-                <p>The requested path does not exist on this server</p>
+                <h1>404 Not Found</h1>
+                <p>The requested URL does not exist on this server</p>
             </div>
         </div>
         <div class="footer">

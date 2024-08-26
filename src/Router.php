@@ -5,12 +5,11 @@ namespace OmniRoute;
 use OmniRoute\Exceptions\RouterExceptions;
 require_once __DIR__."/exceptions/RouterExceptions.php";
 
-use OmniRoute\utils\RenderEngine;
-require_once __DIR__."/utils/RenderEngine.php";
+require_once __DIR__."/utils/constants.php";
 
 class Router {
     private static array $routes = array();
-    private static $notFoundAction, $invalidMethodAction;
+    private static array $errorCallbacks = array();
     private static string $siteDir;
 
     public static function add(string $path, callable $callback, array $method = array("GET")) {
@@ -18,12 +17,8 @@ class Router {
         self::$routes[$path] = ["callback"=>$callback, "method"=>$method];
     }
 
-    public static function setNotFound(callable $callback) {
-        self::$notFoundAction = $callback;
-    }
-
-    public static function setInvalidMethod(callable $callback) {
-        self::$invalidMethodAction = $callback;
+    public static function registerErrorCallback(string $errorCode, callable $callback) {
+        self::$errorCallbacks[$errorCode] = $callback;
     }
 
     public static function run() {
@@ -37,16 +32,16 @@ class Router {
                 $toLoad["callback"]();
             } else {
                 http_response_code(405);
-                if (isset(self::$invalidMethodAction)) {
-                    call_user_func_array(self::$invalidMethodAction, array($path, $_SERVER["REQUEST_METHOD"]));
+                if (in_array(OMNI_405, self::$errorCallbacks)) {
+                    call_user_func_array(self::$errorCallbacks[OMNI_405], array($path, $_SERVER["REQUEST_METHOD"]));
                 } else {
                     self::loadPrerendered("405");
                 }
             }
         } else {
             http_response_code(404);
-            if (isset(self::$notFoundAction)) {
-                call_user_func_array(self::$notFoundAction, array($path));
+            if (in_array(OMNI_404, self::$errorCallbacks)) {
+                call_user_func_array(self::$errorCallbacks[OMNI_404], array($path, $_SERVER["REQUEST_METHOD"]));
             } else {
                 self::loadPrerendered("404");
             }
