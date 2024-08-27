@@ -10,7 +10,6 @@ require_once __DIR__."/utils/constants.php";
 class Router {
     private static array $routes = array();
     private static array $errorCallbacks = array();
-    private static string $siteDir;
 
     public static function add(string $path, callable $callback, array $method = array("GET")) {
         $path = (str_ends_with($path, "/"))?$path:$path."/";
@@ -32,7 +31,7 @@ class Router {
                 $toLoad["callback"]();
             } else {
                 http_response_code(405);
-                if (in_array(OMNI_405, self::$errorCallbacks)) {
+                if (isset(self::$errorCallbacks[OMNI_405])) {
                     call_user_func_array(self::$errorCallbacks[OMNI_405], array($path, $_SERVER["REQUEST_METHOD"]));
                 } else {
                     self::loadPrerendered("405");
@@ -40,8 +39,8 @@ class Router {
             }
         } else {
             http_response_code(404);
-            if (in_array(OMNI_404, self::$errorCallbacks)) {
-                call_user_func_array(self::$errorCallbacks[OMNI_404], array($path, $_SERVER["REQUEST_METHOD"]));
+            if (isset(self::$errorCallbacks[OMNI_404])) {
+                call_user_func_array(self::$errorCallbacks[OMNI_404], array($path));
             } else {
                 self::loadPrerendered("404");
             }
