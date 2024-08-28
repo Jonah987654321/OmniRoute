@@ -12,10 +12,8 @@
 
 ## Installation
 
-Include the OmniRoute class in your project by requiring the `Router.php` file and any necessary dependencies:
-
-```php
-require_once 'path/to/Router.php';
+```
+composer require jonahh/omniroute
 ```
 
 ## Usage
