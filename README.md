@@ -26,10 +26,11 @@ You can register a simple route by calling the `add` method:
 
 ```php
 use OmniRoute\Router;
+require __DIR__.'/vendor/autoload.php';
 
 Router::add('/home', function() {
     echo "Welcome to the homepage!";
-}, ['GET']);
+});
 ```
 
 ### Route with Parameters
@@ -39,7 +40,7 @@ To create a route with dynamic parameters, use placeholders wrapped in `<: :>`:
 ```php
 Router::add('/user/<:id:>', function($id) {
     echo "User ID: " . $id;
-}, ['GET']);
+});
 ```
 
 ### Prefixing Routes
@@ -51,10 +52,29 @@ Router::registerPrefix('/api/v1');
 
 Router::add('/users', function() {
     echo "Users endpoint";
-}, ['GET']);
+});
 ```
 
 All routes added after setting a prefix will automatically include it.
+
+### Registering Sub-Routers
+
+For better modularization, you can load routes from external files:
+
+```php
+Router::registerSubRouter('path/to/routes.php');
+```
+
+### Setting allowed methods
+
+You can set what methods are allowed for routes to be called:
+
+```php
+
+Router::add('/api/post-only', function() {
+    echo json_encode(["data"=>$data]);
+}, ["POST"]);
+```
 
 ### Handling Errors
 
@@ -70,14 +90,6 @@ Router::registerErrorCallback(OMNI_405, function($path, $method) {
 });
 ```
 
-### Registering Sub-Routers
-
-For better modularization, you can load routes from external files:
-
-```php
-Router::registerSubRouter('path/to/routes.php');
-```
-
 ### Running the Router
 
 Finally, to execute the router and handle incoming requests, call the `run` method:
@@ -86,44 +98,10 @@ Finally, to execute the router and handle incoming requests, call the `run` meth
 Router::run();
 ```
 
-## Example
-
-Here’s a full example of setting up routes with OmniRoute:
-
-```php
-require_once 'path/to/Router.php';
-
-use OmniRoute\Router;
-
-// Register a prefix
-Router::registerPrefix('/api/v1');
-
-// Register routes
-Router::add('/users', function() {
-    echo "List of users";
-}, ['GET']);
-
-Router::add('/user/<:id:>', function($id) {
-    echo "User ID: $id";
-}, ['GET']);
-
-// Register error callbacks
-Router::registerErrorCallback(OMNI_404, function($path) {
-    echo "404 Not Found: $path";
-});
-
-Router::registerErrorCallback(OMNI_405, function($path, $method) {
-    echo "405 Method Not Allowed: $method for $path";
-});
-
-// Run the router
-Router::run();
-```
-
 ## License
 
 This package is open-source and available under the MIT License.
 
----
+## Author
 
-For further details and documentation, refer to the source code and comments within the `Router.php` file. Contributions and issues are welcome.
+This package is developed by [Jonah](https://github.com/Jonah987654321/)
