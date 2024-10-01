@@ -2,22 +2,51 @@
 
 namespace OmniRoute;
 
-use OmniRoute\Exceptions\RouterExceptions\PathAlreadyRegistered;
+require __DIR__."/utils/functions.php";
+require __DIR__."/utils/constants.php";
+
+require_once __DIR__."/exceptions/ExtensionExceptions.php";
+use OmniRoute\Exceptions\ExtensionExceptions\InvalidExtension;
+use OmniRoute\Exceptions\ExtensionExceptions\MissingSetupData;
 
 require_once __DIR__."/exceptions/RouterExceptions.php";
-require_once __DIR__."/utils/constants.php";
+use OmniRoute\Exceptions\RouterExceptions\PathAlreadyRegistered;
+use OmniRoute\Exceptions\RouterExceptions\StatusCodeNotSupported;
+
+session_start();
 
 class Router {
     private static array $routes = array();
     private static array $errorCallbacks = array();
     private static string $prefix = "/";
 
+    public static function loadExtension(array $extension, array $setup = null) {
+        if (!isset($extension["name"]) || !isset($extension["requiredSetup"])) {
+            throw new InvalidExtension();
+        }
+
+        foreach ($extension["requiredSetup"] as $setupKey) {
+            if (!isset($setup[$setupKey])) {
+                throw new MissingSetupData($extension["name"], $setupKey);
+            }
+        }
+
+        switch($extension["name"]) {
+            case "OmniLogin":
+                require __DIR__."/extensions/Login.php";
+                \OmniRoute\Extensions\OmniLogin::setLoginRoute($setup["loginRoute"]);
+                break;
+            default:
+                break;
+        }
+    }
+
     public static function registerPrefix(string $prefix) {
         self::__setPrefix(self::$prefix . ltrim(rtrim($prefix, '/'), '/') . '/');
     }
 
-    public static function add(string $path, callable $callback, array $method = array("GET")) {
-        // Kombiniere das Präfix mit dem Pfad
+    public static function add(string $path, callable $callback, array $method = ["GET"], array $ext = []) {
+        // Combine prefix with path
         $fullPath = self::$prefix . ltrim($path, '/');
         $fullPath = (str_ends_with($fullPath, "/")) ? $fullPath : $fullPath . "/";
 
@@ -37,7 +66,7 @@ class Router {
             throw new PathAlreadyRegistered($fullPath);
         }
 
-        self::$routes[$fullPath] = ["callback" => $callback, "method" => $method];
+        self::$routes[$fullPath] = ["callback" => $callback, "method" => $method, "ext" => $ext];
     }
 
     public static function registerErrorCallback(string $errorCode, callable $callback) {
@@ -57,26 +86,17 @@ class Router {
         $parsed_url = parse_url($_SERVER['REQUEST_URI']);
         $path = (str_ends_with($parsed_url["path"], "/")) ? $parsed_url["path"] : $parsed_url["path"] . "/";
 
+        $route = false;
+
         if (isset(self::$routes[$path])) {
-            $toLoad = self::$routes[$path];
-            if (in_array($_SERVER["REQUEST_METHOD"], $toLoad["method"])) {
-                $toLoad["callback"]();
-            } else {
-                http_response_code(405);
-                if (isset(self::$errorCallbacks[OMNI_405])) {
-                    call_user_func_array(self::$errorCallbacks[OMNI_405], array($path, $_SERVER["REQUEST_METHOD"]));
-                } else {
-                    self::__loadPrerendered("405");
-                }
-            }
+            $route = self::$routes[$path];
+            $route["args"] = [];
         } else {
 
             //Check for RegEx Arguments
-            $regexMatch = false;
             foreach (array_keys(self::$routes) as $r) {
                 $regEx = "'".str_replace("/", "\/", $r)."?'";
                 if (preg_match($regEx, $path)) {
-                    $regexMatch = true;
                     $arguments = [];
 
                     $urlPath = self::__splitPath($path);
@@ -88,19 +108,37 @@ class Router {
                         }
                     }
 
-                    call_user_func_array(self::$routes[$r]["callback"], $arguments);
+                    $route = self::$routes[$r];
+                    $route["args"] = $arguments;
                     break;
                 }
             }
+        }
 
-            if (!$regexMatch) {
-                http_response_code(404);
-                if (isset(self::$errorCallbacks[OMNI_404])) {
-                    call_user_func_array(self::$errorCallbacks[OMNI_404], array($path));
-                } else {
-                    self::__loadPrerendered("404");
-                }
+        if (!$route) {
+            self::throwFrontendError(OMNI_404, array($path));
+        } else if (!in_array($_SERVER["REQUEST_METHOD"], $route["method"])) {
+            self::throwFrontendError(OMNI_405, array($path, $_SERVER["REQUEST_METHOD"]));
+        } else {
+            foreach($route["ext"] as $ext) {
+                call_user_func_array($ext, [$path]);
             }
+
+            call_user_func_array($route["callback"], $route["args"]);
+        }
+    }
+
+    public static function throwFrontendError($code, $args) {
+        $supported = [OMNI_404, OMNI_405];
+        if (!in_array($code, $supported)) {
+            throw new StatusCodeNotSupported($code);
+        }
+
+        http_response_code($code);
+        if (isset(self::$errorCallbacks[$code])) {
+            call_user_func_array(self::$errorCallbacks[$code], $args);
+        } else {
+            self::__loadPrerendered(strval($code));
         }
     }
 
