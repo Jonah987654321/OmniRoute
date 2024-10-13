@@ -63,10 +63,18 @@ class Router {
         $fullPath = "/".implode("/", $newPaths)."/";
 
         if (key_exists($fullPath, self::$routes)) {
-            throw new PathAlreadyRegistered($fullPath);
-        }
+            foreach(self::$routes[$fullPath] as $r) {
+                foreach($method as $m) {
+                    if (in_array($m, $r["method"])) {
+                        throw new PathAlreadyRegistered($fullPath);
+                    }
+                }
+            }
 
-        self::$routes[$fullPath] = ["callback" => $callback, "method" => $method, "ext" => $ext];
+            self::$routes[$fullPath][] = ["callback" => $callback, "method" => $method, "ext" => $ext];
+        } else {
+            self::$routes[$fullPath] = array(["callback" => $callback, "method" => $method, "ext" => $ext]);
+        }
     }
 
     public static function registerErrorCallback(string $errorCode, callable $callback) {
@@ -86,30 +94,43 @@ class Router {
         $parsed_url = parse_url($_SERVER['REQUEST_URI']);
         $path = (str_ends_with($parsed_url["path"], "/")) ? $parsed_url["path"] : $parsed_url["path"] . "/";
 
-        $route = false;
+        $route = null;
 
         if (isset(self::$routes[$path])) {
-            $route = self::$routes[$path];
-            $route["args"] = [];
+            foreach (self::$routes[$path] as $r) {
+                if (in_array($_SERVER["REQUEST_METHOD"], $r["method"])) {
+                    $route = $r;
+                    $route["args"] = [];
+                    break;
+                }
+            }
+            
+            $route = ($route==null)?OMNI_405:$route;
         } else {
 
             //Check for RegEx Arguments
             foreach (array_keys(self::$routes) as $r) {
                 $regEx = "'".str_replace("/", "\/", $r)."?'";
                 if (preg_match($regEx, $path)) {
-                    $arguments = [];
+                    foreach (self::$routes[$r] as $mR) {
+                        if (in_array($_SERVER["REQUEST_METHOD"], $mR["method"])) {
+                            $arguments = [];
 
-                    $urlPath = self::__splitPath($path);
-                    $storedPath = self::__splitPath($r);
+                            $urlPath = self::__splitPath($path);
+                            $storedPath = self::__splitPath($r);
 
-                    for ($i=0; $i<sizeof($urlPath); $i++) {
-                        if ($storedPath[$i] == "\w+") {
-                            $arguments[] = $urlPath[$i];
-                        }
+                            for ($i=0; $i<sizeof($urlPath); $i++) {
+                                if ($storedPath[$i] == "\w+") {
+                                    $arguments[] = $urlPath[$i];
+                                }
+                            }
+                        
+                            $route = self::$routes[$r];
+                            $route["args"] = $arguments;
+                            break;
+                       }
                     }
-
-                    $route = self::$routes[$r];
-                    $route["args"] = $arguments;
+                    $route = ($route==null)?OMNI_405:$route;
                     break;
                 }
             }
@@ -117,7 +138,7 @@ class Router {
 
         if (!$route) {
             self::throwFrontendError(OMNI_404, array($path));
-        } else if (!in_array($_SERVER["REQUEST_METHOD"], $route["method"])) {
+        } else if ($route == OMNI_405) {
             self::throwFrontendError(OMNI_405, array($path, $_SERVER["REQUEST_METHOD"]));
         } else {
             foreach($route["ext"] as $ext) {
