@@ -142,7 +142,7 @@ class Router {
             self::throwFrontendError(OMNI_405, array($path, $_SERVER["REQUEST_METHOD"]));
         } else {
             foreach($route["ext"] as $ext) {
-                call_user_func_array($ext, [$path]);
+                call_user_func_array($ext["function"], array_merge([$path], $ext["params"]));
             }
 
             call_user_func_array($route["callback"], $route["args"]);

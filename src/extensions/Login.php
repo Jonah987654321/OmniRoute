@@ -4,13 +4,17 @@ namespace OmniRoute\Extensions;
 
 use OmniRoute\Exceptions\LoginExceptions\NoUserLoggedIn;
 use OmniRoute\Exceptions\LoginExceptions\UserAlreadyLoggedIn;
+use OmniRoute\Exceptions\LoginExceptions\UserCheckAlreadyRegistered;
+use OmniRoute\Exceptions\LoginExceptions\UserCheckNotRegistered;
+
 require_once __DIR__."/../exceptions/LoginExceptions.php";
 require_once __DIR__."/../utils/functions.php";
 
 class OmniLogin {
 
     private static string $loginRoute;
-     
+    private static array $loginChecks;
+
     public static function setLoginRoute(string $route) {
         self::$loginRoute = $route;
     }
@@ -43,6 +47,26 @@ class OmniLogin {
         if (!self::isUserLoggedIn()) {
             return redirect(self::$loginRoute."?next=".urlencode($route));
         }
+    }
+
+    public static function registerUserCheck(string $name,  callable $check) {
+        if (isset(self::$loginChecks[$name])) {
+            throw new UserCheckAlreadyRegistered($name);
+        }
+
+        self::$loginChecks[$name] = $check;
+    }
+
+    public static function runUserCheck(string $name) {
+        if (!isset(self::$loginChecks[$name])) {
+            throw new UserCheckNotRegistered($name);
+        }
+
+        return ["function" => ["OmniRoute\\Extensions\\OmniLogin", "userCheckExecute"], "params" => [$name]];
+    }
+
+    public static function userCheckExecute($route, string $name) {
+        call_user_func_array(self::$loginChecks[$name], [self::getUser()]);
     }
 }
 
