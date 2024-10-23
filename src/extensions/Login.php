@@ -20,31 +20,38 @@ class OmniLogin {
     }
 
     public static function loginUser($user) {
-        if (isset($_SESSION["OMNILOGIN_USER"])) {
+        if (isset($_SESSION["OmniRoute"]["ext"]["OmniLogin"]["user"])) {
             throw new UserAlreadyLoggedIn();
         }
 
-        $_SESSION["OMNILOGIN_USER"] = $user;
+        $_SESSION["OmniRoute"]["ext"]["OmniLogin"]["user"] = $user;
+    }
+
+    public static function loginUserAndRedirect($user) {
+        self::loginUser($user);
+
+        return isset($_SESSION["OmniRoute"]["ext"]["OmniLogin"]["afterLogin"])?redirect($_SESSION["OmniRoute"]["ext"]["OmniLogin"]["afterLogin"]):redirect("/");
     }
 
     public static function logoutUser() {
-        if (!isset($_SESSION["OMNILOGIN_USER"])) {
+        if (!isset($_SESSION["OmniRoute"]["ext"]["OmniLogin"]["user"])) {
             throw new NoUserLoggedIn();
         }
 
-        unset($_SESSION["OMNILOGIN_USER"]);
+        unset($_SESSION["OmniRoute"]["ext"]["OmniLogin"]["user"]);
     }
 
     public static function getUser() {
-        return (isset($_SESSION["OMNILOGIN_USER"])?$_SESSION["OMNILOGIN_USER"]:null);
+        return (isset($_SESSION["OmniRoute"]["ext"]["OmniLogin"]["user"])?$_SESSION["OmniRoute"]["ext"]["OmniLogin"]["user"]:null);
     }
 
     public static function isUserLoggedIn() {
-        return isset($_SESSION["OMNILOGIN_USER"]); 
+        return isset($_SESSION["OmniRoute"]["ext"]["OmniLogin"]["user"]); 
     }
 
     public static function loginRequired($route) {
         if (!self::isUserLoggedIn()) {
+            $_SESSION["OmniRoute"]["ext"]["OmniLogin"]["afterLogin"] = $route;
             return redirect(self::$loginRoute."?next=".urlencode($route));
         }
     }
