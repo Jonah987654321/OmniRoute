@@ -125,7 +125,7 @@ class Router {
                                 }
                             }
                         
-                            $route = self::$routes[$r];
+                            $route = $mR;
                             $route["args"] = $arguments;
                             break;
                        }
