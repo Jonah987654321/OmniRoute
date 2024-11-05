@@ -63,7 +63,7 @@ class Router {
             }
         }
 
-        $fullPath = "/".implode("/", $newPaths)."/";
+        $fullPath = (count($newPaths)==0)?"/":"/".implode("/", $newPaths)."/";
 
         if (key_exists($fullPath, self::$routes)) {
             foreach(self::$routes[$fullPath] as $r) {
@@ -113,28 +113,30 @@ class Router {
 
             //Check for RegEx Arguments
             foreach (array_keys(self::$routes) as $r) {
-                $regEx = "'".str_replace("/", "\/", $r)."?'";
-                if (preg_match($regEx, $path)) {
-                    foreach (self::$routes[$r] as $mR) {
-                        if (in_array($_SERVER["REQUEST_METHOD"], $mR["method"])) {
-                            $arguments = [];
-
-                            $urlPath = self::__splitPath($path);
-                            $storedPath = self::__splitPath($r);
-
-                            for ($i=0; $i<sizeof($urlPath); $i++) {
-                                if ($storedPath[$i] == "\w+") {
-                                    $arguments[] = $urlPath[$i];
+                if ($r != "/") {
+                    $regEx = "'".str_replace("/", "\/", $r)."?'";
+                    if (preg_match($regEx, $path)) {
+                        foreach (self::$routes[$r] as $mR) {
+                            if (in_array($_SERVER["REQUEST_METHOD"], $mR["method"])) {
+                                $arguments = [];
+                            
+                                $urlPath = self::__splitPath($path);
+                                $storedPath = self::__splitPath($r);
+                            
+                                for ($i=0; $i<sizeof($urlPath); $i++) {
+                                    if ($storedPath[$i] == "\w+") {
+                                        $arguments[] = $urlPath[$i];
+                                    }
                                 }
-                            }
-                        
-                            $route = $mR;
-                            $route["args"] = $arguments;
-                            break;
-                       }
+                            
+                                $route = $mR;
+                                $route["args"] = $arguments;
+                                break;
+                           }
+                        }
+                        $route = ($route==null)?OMNI_405:$route;
+                        break;
                     }
-                    $route = ($route==null)?OMNI_405:$route;
-                    break;
                 }
             }
         }
