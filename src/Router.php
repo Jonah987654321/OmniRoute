@@ -36,6 +36,9 @@ class Router {
                 require __DIR__."/extensions/Login.php";
                 \OmniRoute\Extensions\OmniLogin::setLoginRoute($setup["loginRoute"]);
                 break;
+            case "Tasks":
+                require __DIR__."/extensions/Task.php";
+                break;
             default:
                 break;
         }
