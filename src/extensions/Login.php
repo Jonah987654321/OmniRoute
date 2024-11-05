@@ -45,6 +45,10 @@ class OmniLogin {
         return (isset($_SESSION["OmniRoute"]["ext"]["OmniLogin"]["user"])?$_SESSION["OmniRoute"]["ext"]["OmniLogin"]["user"]:null);
     }
 
+    public static function updateUser($user) {
+        $_SESSION["OmniRoute"]["ext"]["OmniLogin"]["user"] = $user;
+    }
+
     public static function isUserLoggedIn() {
         return isset($_SESSION["OmniRoute"]["ext"]["OmniLogin"]["user"]); 
     }
