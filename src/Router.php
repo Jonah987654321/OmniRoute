@@ -114,7 +114,7 @@ class Router {
             //Check for RegEx Arguments
             foreach (array_keys(self::$routes) as $r) {
                 if ($r != "/") {
-                    $regEx = "'".str_replace("/", "\/", $r)."?'";
+                    $regEx = "'^" . str_replace("/", "\/", $r) . "$'";
                     if (preg_match($regEx, $path)) {
                         foreach (self::$routes[$r] as $mR) {
                             if (in_array($_SERVER["REQUEST_METHOD"], $mR["method"])) {
