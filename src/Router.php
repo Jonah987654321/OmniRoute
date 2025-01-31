@@ -12,7 +12,9 @@ use OmniRoute\Exceptions\ExtensionExceptions\MissingSetupData;
 require_once __DIR__."/exceptions/RouterExceptions.php";
 use OmniRoute\Exceptions\RouterExceptions\PathAlreadyRegistered;
 use OmniRoute\Exceptions\RouterExceptions\StatusCodeNotSupported;
-use OmniRoute\Exceptions\RouterExceptions\FileNotExisting;
+
+require_once __DIR__."/exceptions/FileExceptions.php";
+use OmniRoute\Exceptions\FileExceptions\FileNotExisting;
 
 session_start();
 

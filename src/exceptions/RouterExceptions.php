@@ -14,10 +14,4 @@ class StatusCodeNotSupported extends Exception {
         parent::__construct("HTTP response code $code seems to be not valid as http response code or not yet supported", 0, null);
     }
 }
-
-class FileNotExisting extends Exception {
-    public function __construct($path) {
-        parent::__construct("File in location $path does not exist", 0, null);
-    }
-}
 ?>
