@@ -12,6 +12,7 @@ use OmniRoute\Exceptions\ExtensionExceptions\MissingSetupData;
 require_once __DIR__."/exceptions/RouterExceptions.php";
 use OmniRoute\Exceptions\RouterExceptions\PathAlreadyRegistered;
 use OmniRoute\Exceptions\RouterExceptions\StatusCodeNotSupported;
+use OmniRoute\Exceptions\RouterExceptions\FileNotExisting;
 
 session_start();
 
@@ -86,6 +87,10 @@ class Router {
 
     public static function registerSubRouter($filePath) {
         $savePrefix = self::$prefix;
+
+        if (!is_file($filePath)) {
+            throw new FileNotExisting($filePath);
+        }
 
         require_once $filePath;
 

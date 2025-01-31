@@ -15,4 +15,9 @@ class StatusCodeNotSupported extends Exception {
     }
 }
 
+class FileNotExisting extends Exception {
+    public function __construct($path) {
+        parent::__construct("File in location $path does not exist", 0, null);
+    }
+}
 ?>
