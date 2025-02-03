@@ -17,7 +17,7 @@ class Post {
 
     public static function require(...$keys): bool {
         foreach ($keys as $k) {
-            if (!self::has($k)) {
+            if (!self::has($k) || self::isEmpty($k)) {
                 return false;
             }
         }
