@@ -11,8 +11,8 @@ class Post {
         return !self::has($key) || empty($_POST[$key]);
     }
 
-    public static function get(string $key): ?string {
-        return self::has($key)?$_POST[$key]:null;
+    public static function get(string $key, string $default = null): ?string {
+        return self::has($key)?$_POST[$key]:$default;
     }
 
     public static function require(...$keys): bool {
