@@ -37,9 +37,9 @@ class Post {
             case POST_URL:
                 return filter_var($value, FILTER_SANITIZE_URL);
             case POST_INT:
-                return filter_var($value, FILTER_SANITIZE_NUMBER_INT);
+                return intval(filter_var($value, FILTER_SANITIZE_NUMBER_INT));
             case POST_FLOAT:
-                return filter_var($value, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+                return floatval(filter_var($value, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION));
             default:
                 return $value;
         }
