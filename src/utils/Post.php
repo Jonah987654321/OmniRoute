@@ -24,7 +24,7 @@ class Post {
         return true;
     }
 
-    public static function sanitize(string $key, string $type): ?string {
+    public static function sanitize(string $key, string $type): string|int|float {
         if (!self::has($key)) {
             return null;
         }
